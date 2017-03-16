@@ -12,7 +12,7 @@ def enable_networking(val):
 
     iface = dbus.Interface(wifi, dbus_interface='org.freedesktop.NetworkManager')
 
-    # getting all devices
+    # enabling/disabling networking
     m = iface.get_dbus_method("Enable", dbus_interface=None)
     m(val)
 
