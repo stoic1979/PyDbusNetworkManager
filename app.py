@@ -47,6 +47,29 @@ def get_active_connections():
     m = iface.get_dbus_method("Get", dbus_interface=None)
     return [ str(ac) for ac in m("org.freedesktop.NetworkManager", "ActiveConnections") ]
 
+def get_active_connection_info(ac_path):
+    bus = dbus.SystemBus()
+    wifi = bus.get_object('org.freedesktop.NetworkManager', ac_path)
+
+    iface = dbus.Interface(wifi, dbus_interface='org.freedesktop.DBus.Properties')
+
+    # creating proxy 'Get' method
+    m = iface.get_dbus_method("Get", dbus_interface=None)
+
+    # getting Id of active connection
+    Id = m("org.freedesktop.NetworkManager.Connection.Active", "Id")
+
+    # getting Type of active connection
+    Type = m("org.freedesktop.NetworkManager.Connection.Active", "Type")
+
+    # getting Uuid of active connection
+    Uuid = m("org.freedesktop.NetworkManager.Connection.Active", "Uuid")
+
+    # getting State of active connection
+    State = m("org.freedesktop.NetworkManager.Connection.Active", "State")
+
+    return (str(Id), str(Type), str(Uuid), int(State))
+
 def get_wifi_access_points_by_dev(device_path):
     bus = dbus.SystemBus()
     obj = bus.get_object('org.freedesktop.NetworkManager', device_path)
@@ -111,7 +134,6 @@ def get_access_point_brief_info(ap_path):
 
 
 if __name__ == "__main__":
-    print get_active_connections()
 
     print get_devices()
     print get_wifi_access_points()
@@ -120,3 +142,8 @@ if __name__ == "__main__":
     for ap in get_wifi_access_points():
         print get_access_point_brief_info(ap)
 
+    # getting active connection info
+    print "\n------------[ Active Connections ]----------------"
+    print get_active_connections()
+    for ac in get_active_connections():
+        print get_active_connection_info(ac)
