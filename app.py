@@ -1,5 +1,21 @@
 import dbus
 
+def enable_networking(val):
+    """
+    function enables/disables networking depending upon the 'val' argument
+    if val is True, networking is enabled
+    if val is False, networking is disabled
+    """
+    bus = dbus.SystemBus()
+    wifi = bus.get_object('org.freedesktop.NetworkManager',
+                        '/org/freedesktop/NetworkManager')
+
+    iface = dbus.Interface(wifi, dbus_interface='org.freedesktop.NetworkManager')
+
+    # getting all devices
+    m = iface.get_dbus_method("Enable", dbus_interface=None)
+    m(val)
+
 def get_devices():
     bus = dbus.SystemBus()
     wifi = bus.get_object('org.freedesktop.NetworkManager',
@@ -78,9 +94,11 @@ def get_access_point_brief_info(ap_path):
 
 
 if __name__ == "__main__":
-    #print get_devices()
-    #print get_wifi_access_points()
 
+    print get_devices()
+    print get_wifi_access_points()
+
+    # getting access points' Ssid, Strength, HwAddress
     for ap in get_wifi_access_points():
         print get_access_point_brief_info(ap)
 
