@@ -10,6 +10,7 @@ def get_network_manager_introspection():
     m = iface.get_dbus_method("Introspect", dbus_interface=None)
     return m()
 
+
 def enable_networking(val):
     """
     function enables/disables networking depending upon the 'val' argument
@@ -25,6 +26,7 @@ def enable_networking(val):
     m = iface.get_dbus_method("Enable", dbus_interface=None)
     m(val)
 
+
 def get_devices():
     bus = dbus.SystemBus()
     wifi = bus.get_object('org.freedesktop.NetworkManager', '/org/freedesktop/NetworkManager')
@@ -38,6 +40,7 @@ def get_devices():
         devs.append("%s" % dev)
     return devs
 
+
 def get_active_connections():
     bus = dbus.SystemBus()
     wifi = bus.get_object('org.freedesktop.NetworkManager', '/org/freedesktop/NetworkManager')
@@ -46,6 +49,7 @@ def get_active_connections():
 
     m = iface.get_dbus_method("Get", dbus_interface=None)
     return [ str(ac) for ac in m("org.freedesktop.NetworkManager", "ActiveConnections") ]
+
 
 def get_active_connection_info(ac_path):
     bus = dbus.SystemBus()
@@ -73,6 +77,7 @@ def get_active_connection_info(ac_path):
     # However, other properties like Dhcp4Config, Dhcp6Config, Ip4Config, Ip6Config etc. can also be obtained
     return (str(Id), str(Type), str(Uuid), int(State))
 
+
 def get_wifi_access_points_by_dev(device_path):
     bus = dbus.SystemBus()
     obj = bus.get_object('org.freedesktop.NetworkManager', device_path)
@@ -83,6 +88,7 @@ def get_wifi_access_points_by_dev(device_path):
     m = iface.get_dbus_method("GetAccessPoints", dbus_interface=None)
 
     return [str(ap) for ap in m()]
+
 
 def get_wifi_access_points():
     aps = None
@@ -96,6 +102,7 @@ def get_wifi_access_points():
         except:
             pass
     return aps
+
 
 def get_access_point_all_info(ap_path):
 
@@ -138,7 +145,10 @@ def get_access_point_brief_info(ap_path):
 
 if __name__ == "__main__":
 
+    print "\n------------[ Devices ]----------------"
     print get_devices()
+
+    print "\n------------[ Access Points ]----------------"
     print get_wifi_access_points()
 
     # getting access points' Ssid, Strength, HwAddress
