@@ -78,6 +78,24 @@ def get_active_connection_info(ac_path):
     return (str(Id), str(Type), str(Uuid), int(State))
 
 
+def deactivate_connection(ac_path):
+    bus = dbus.SystemBus()
+    wifi = bus.get_object('org.freedesktop.NetworkManager', '/org/freedesktop/NetworkManager')
+
+    iface = dbus.Interface(wifi, dbus_interface='org.freedesktop.NetworkManager')
+
+    # getting all devices
+    m = iface.get_dbus_method("DeactivateConnection", dbus_interface=None)
+
+    try:
+        m(ac_path)
+        return True
+    except Exception as exp:
+        print "deactivate_connection() exception :: %s" % exp
+
+    return False
+
+
 def get_wifi_access_points_by_dev(device_path):
     bus = dbus.SystemBus()
     obj = bus.get_object('org.freedesktop.NetworkManager', device_path)
@@ -160,3 +178,10 @@ if __name__ == "__main__":
     print get_active_connections()
     for ac in get_active_connections():
         print get_active_connection_info(ac)
+
+    print "\n------------[ Deactivate Connection ]----------------"
+    for ac in get_active_connections():
+        if deactivate_connection(ac):
+            print "Successfully deactivated: %s" % ac
+        else:
+            print "Failed to deactivate: %s" % ac
