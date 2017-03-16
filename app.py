@@ -68,6 +68,9 @@ def get_active_connection_info(ac_path):
     # getting State of active connection
     State = m("org.freedesktop.NetworkManager.Connection.Active", "State")
 
+    # NOTE:
+    # this function only returns properties like Id, Type, Uuid, State of an active connection
+    # However, other properties like Dhcp4Config, Dhcp6Config, Ip4Config, Ip6Config etc. can also be obtained
     return (str(Id), str(Type), str(Uuid), int(State))
 
 def get_wifi_access_points_by_dev(device_path):
