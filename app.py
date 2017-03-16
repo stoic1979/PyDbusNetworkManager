@@ -1,5 +1,15 @@
 import dbus
 
+def get_network_manager_introspection():
+    bus = dbus.SystemBus()
+    obj = bus.get_object('org.freedesktop.NetworkManager', '/org/freedesktop/NetworkManager')
+
+    iface = dbus.Interface(obj, dbus_interface='org.freedesktop.DBus.Introspectable')
+
+    # getting introspection xml
+    m = iface.get_dbus_method("Introspect", dbus_interface=None)
+    return m()
+
 def enable_networking(val):
     """
     function enables/disables networking depending upon the 'val' argument
@@ -92,6 +102,7 @@ def get_access_point_brief_info(ap_path):
 
 
 if __name__ == "__main__":
+    print get_network_manager_introspection()
 
     print get_devices()
     print get_wifi_access_points()
