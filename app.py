@@ -66,6 +66,8 @@ def get_access_point_all_info(ap_path):
     for k,v in props.iteritems():
         print k,v
 
+    return props
+
 
 def get_access_point_brief_info(ap_path):
 
