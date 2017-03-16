@@ -35,14 +35,52 @@ def get_wifi_access_points():
     for dev in get_devices():
         try:
             aps = get_wifi_access_points_by_dev(dev)
-            #break
+            break
         except:
             pass
     return aps
 
+def get_access_point_all_info(ap_path):
+
+    bus = dbus.SystemBus()
+    obj = bus.get_object('org.freedesktop.NetworkManager', ap_path)
+
+    iface = dbus.Interface(obj, dbus_interface='org.freedesktop.DBus.Properties')
+
+    m = iface.get_dbus_method("GetAll", dbus_interface=None)
+
+    # getting all ppoperties like Ssid, Strength, HwAddress etc.
+    props = m("org.freedesktop.NetworkManager.AccessPoint")
+    for k,v in props.iteritems():
+        print k,v
+
+
+def get_access_point_brief_info(ap_path):
+
+    bus = dbus.SystemBus()
+    obj = bus.get_object('org.freedesktop.NetworkManager', ap_path)
+
+    iface = dbus.Interface(obj, dbus_interface='org.freedesktop.DBus.Properties')
+
+    m = iface.get_dbus_method("Get", dbus_interface=None)
+
+    # getting Ssid
+    dbusArray = m("org.freedesktop.NetworkManager.AccessPoint", "Ssid")
+    Ssid = ''.join([chr(character) for character in dbusArray])
+
+    # getting Strength
+    Strength = m("org.freedesktop.NetworkManager.AccessPoint", "Strength")
+
+    # getting HwAddress
+    HwAddress = m("org.freedesktop.NetworkManager.AccessPoint", "HwAddress")
+
+    return (Ssid, int(Strength), str(HwAddress))
 
 
 if __name__ == "__main__":
-    print get_devices()
-    print get_wifi_access_points()
+    #print get_devices()
+    #print get_wifi_access_points()
+
+    for ap in get_wifi_access_points():
+        print get_access_point_brief_info(ap)
 
