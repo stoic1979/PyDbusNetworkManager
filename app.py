@@ -5,7 +5,7 @@ class DBusNetworkManager:
     def __init__(self):
         pass
 
-    def get_network_manager_introspection(self):
+    def get_introspection(self):
         bus = dbus.SystemBus()
         obj = bus.get_object('org.freedesktop.NetworkManager', '/org/freedesktop/NetworkManager')
 
@@ -163,12 +163,31 @@ class DBusNetworkManager:
         # getting HwAddress
         HwAddress = m("org.freedesktop.NetworkManager.AccessPoint", "HwAddress")
 
-        return (Ssid, int(Strength), str(HwAddress))
+        # getting Mode
+        Mode = m("org.freedesktop.NetworkManager.AccessPoint", "Mode")
+
+        return (Ssid, int(Strength), str(HwAddress), int(Mode))
+
+
+    def activate_connection(self, con_path, dev_path, obj_path):
+        bus = dbus.SystemBus()
+        wifi = bus.get_object('org.freedesktop.NetworkManager', '/org/freedesktop/NetworkManager')
+
+        iface = dbus.Interface(wifi, dbus_interface='org.freedesktop.NetworkManager')
+
+        # activating connection
+        m = iface.get_dbus_method("ActivateConnection", dbus_interface=None)
+        active_connection = m(con_path, dev_path, obj_path)
+
+        # on success, active connection object/path is returned
+        return active_connection
 
 
 if __name__ == "__main__":
 
     dnm = DBusNetworkManager()
+
+    print dnm.get_introspection()
 
     print "\n------------[ Devices ]----------------"
     print dnm.get_devices()
@@ -186,9 +205,17 @@ if __name__ == "__main__":
     for ac in dnm.get_active_connections():
         print dnm.get_active_connection_info(ac)
 
+    """
     print "\n------------[ Deactivate Connection ]----------------"
     for ac in dnm.get_active_connections():
         if dnm.deactivate_connection(ac):
             print "Successfully deactivated: %s" % ac
         else:
             print "Failed to deactivate: %s" % ac
+    """
+
+    # hard coded obj paths for testing
+    con_path = dbus.ObjectPath("/org/freedesktop/NetworkManager/Settings/2")
+    dev_path = dbus.ObjectPath("/org/freedesktop/NetworkManager/Devices/2")
+    obj_path = dbus.ObjectPath("/org/freedesktop/NetworkManager/Settings/Connection")
+    print "Current Active Connection: ", dnm.activate_connection(con_path, dev_path, obj_path)
