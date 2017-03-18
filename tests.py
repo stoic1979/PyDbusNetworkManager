@@ -41,7 +41,13 @@ def test_get_access_points(dnm):
 if __name__ == "__main__":
 
     dnm = DBusNetworkManager()
-    print dnm.get_wifi_device_path()
+    status, msg = dnm.connect_to_wifi("p55", "987654321")
+    if status:
+        print "Connection made"
+        print msg
+    else:
+        print "Connection not made"
+        print msg
 
 
 

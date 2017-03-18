@@ -1,4 +1,5 @@
 import dbus
+import time
 
 class DBusNetworkManager:
 
@@ -22,14 +23,17 @@ class DBusNetworkManager:
         if val is True, networking is enabled
         if val is False, networking is disabled
         """
-        bus = dbus.SystemBus()
-        wifi = bus.get_object('org.freedesktop.NetworkManager', '/org/freedesktop/NetworkManager')
+        try:
+            bus = dbus.SystemBus()
+            wifi = bus.get_object('org.freedesktop.NetworkManager', '/org/freedesktop/NetworkManager')
 
-        iface = dbus.Interface(wifi, dbus_interface='org.freedesktop.NetworkManager')
+            iface = dbus.Interface(wifi, dbus_interface='org.freedesktop.NetworkManager')
 
-        # enabling/disabling networking
-        m = iface.get_dbus_method("Enable", dbus_interface=None)
-        m(val)
+            # enabling/disabling networking
+            m = iface.get_dbus_method("Enable", dbus_interface=None)
+            m(val)
+        except:
+            pass
 
 
     def get_devices(self):
@@ -197,7 +201,7 @@ class DBusNetworkManager:
         # device is wlan0 or something else, you may utilize iface.GetDevices()
         # method to obtain a list of all devices, and then iterate over these
         # devices to check if DeviceType property equals NM_DEVICE_TYPE_WIFI (2).
-        device_path = dbus.ObjectPath("/org/freedesktop/NetworkManager/Devices/2")
+        device_path = self.get_wifi_device_path()
         print "wireless device path: ", device_path
 
         # Connect to the device's Wireless interface and obtain list of access points.
@@ -214,17 +218,19 @@ class DBusNetworkManager:
                 bus.get_object("org.freedesktop.NetworkManager", ap_path),
                 "org.freedesktop.DBus.Properties")
             ap_ssid = ap_props.Get("org.freedesktop.NetworkManager.AccessPoint", "Ssid")
+
             # Returned SSID is a list of ASCII values. Let's convert it to a proper string.
             str_ap_ssid = "".join(chr(i) for i in ap_ssid)
             print ap_path, ": SSID =", str_ap_ssid
-            if str_ap_ssid == SSID:
+
+            if str_ap_ssid == ssid:
                 our_ap_path = ap_path
                 break
 
         if not our_ap_path:
-            print "AP not found" 
-            exit(2)
-        print "Our AP: ", our_ap_path
+            return False, "Access Point not found for SSID '%s'" % ssid
+
+        print "Access Point for SSID '%s' is '%s' " %  (ssid, our_ap_path)
 
         # At this point we have all the data we need. Let's prepare our connection
         # parameters so that we can tell the NetworkManager what is the passphrase.
@@ -234,48 +240,50 @@ class DBusNetworkManager:
             },
             "802-11-wireless-security": {
                 "key-mgmt": "wpa-psk",
-                "psk": PASSPHRASE
+                "psk": passphrase
             },
         }
 
         # Establish the connection.
-        settings_path, connection_path = iface.AddAndActivateConnection(
-            connection_params, device_path, our_ap_path)
-        print "settings_path =", settings_path
-        print "connection_path =", connection_path
+        settings_path, connection_path = iface.AddAndActivateConnection( connection_params, device_path, our_ap_path)
     
         # Wait until connection is established. This may take a few seconds.
         NM_ACTIVE_CONNECTION_STATE_ACTIVATED = 2
-        print """Waiting for connection to reach """ \
-            """NM_ACTIVE_CONNECTION_STATE_ACTIVATED state ..."""
+        print "Waiting for connection to reach NM_ACTIVE_CONNECTION_STATE_ACTIVATED state ..."
         connection_props = dbus.Interface(
             bus.get_object("org.freedesktop.NetworkManager", connection_path),
             "org.freedesktop.DBus.Properties")
         state = 0
+
+        ########################################################################
+        #                                                                      #
+        # Loop forever until desired state is detected.                        #
+        #                                                                      #
+        # A timeout should be implemented here, otherwise the program will     #
+        # get stuck if connection fails.                                       #
+        #                                                                      #
+        # IF PASSWORD IS BAD, NETWORK MANAGER WILL DISPLAY A QUERY DIALOG!     #
+        # This is something that should be avoided, but I don't know how, yet. #
+        #                                                                      #
+        #                                                                      #
+        # Also, if connection is disconnected at this point, the Get()         #
+        # method will raise an org.freedesktop.DBus.Error.UnknownMethod        #
+        # exception. This should also be anticipated.                          #
+        #                                                                      #
+        ########################################################################
         while True:
-            # Loop forever until desired state is detected.
-            #
-            # A timeout should be implemented here, otherwise the program will
-            # get stuck if connection fails.
-            #
-            # IF PASSWORD IS BAD, NETWORK MANAGER WILL DISPLAY A QUERY DIALOG!
-            # This is something that should be avoided, but I don't know how, yet.
-            #
-            # Also, if connection is disconnected at this point, the Get()
-            # method will raise an org.freedesktop.DBus.Error.UnknownMethod
-            # exception. This should also be anticipated.
-            state = connection_props.Get(
-                "org.freedesktop.NetworkManager.Connection.Active", "State")
+            state = connection_props.Get( "org.freedesktop.NetworkManager.Connection.Active", "State")
+            print "Connectoin State:", state
             if state == NM_ACTIVE_CONNECTION_STATE_ACTIVATED:
                 break
-            time.sleep(0.001)
-            print "Connection established!"
+            time.sleep(0.01)
+
+        return True, "Connection established successfully"
 
     def get_wifi_device_path(self):
         for dev in self.get_devices():
             try:
                 aps = self.get_wifi_access_points_by_dev(dev)
                 return dev
-
             except:
                 pass
