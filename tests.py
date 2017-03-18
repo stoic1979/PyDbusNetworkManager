@@ -41,7 +41,7 @@ def test_get_access_points(dnm):
 if __name__ == "__main__":
 
     dnm = DBusNetworkManager()
-    test_get_access_points(dnm)
+    print dnm.get_wifi_device_path()
 
 
 

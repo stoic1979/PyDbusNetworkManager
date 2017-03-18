@@ -270,3 +270,12 @@ class DBusNetworkManager:
                 break
             time.sleep(0.001)
             print "Connection established!"
+
+    def get_wifi_device_path(self):
+        for dev in self.get_devices():
+            try:
+                aps = self.get_wifi_access_points_by_dev(dev)
+                return dev
+
+            except:
+                pass
