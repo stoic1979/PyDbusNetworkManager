@@ -43,7 +43,7 @@ class DBusNetworkManager:
         iface = dbus.Interface(wifi, dbus_interface='org.freedesktop.NetworkManager')
 
         # getting all devices
-        m = iface.get_dbus_method("GetAllDevices", dbus_interface=None)
+        m = iface.get_dbus_method("GetDevices", dbus_interface=None)
         devs = []
         for dev in m():
             devs.append("%s" % dev)
